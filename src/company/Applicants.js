@@ -29,6 +29,7 @@ width:1.7cm;
 
 var dataforsort = {};
 var user = "";
+var jobnumber = 0;
 
 class Applicants extends React.Component{
 
@@ -45,6 +46,7 @@ class Applicants extends React.Component{
             profilerender: false
         }
         console.log(props.location.state.mani);
+        jobnumber = props.location.state.mani.jobnumber;
        applicants = [];
         ref.collection('jobs').doc('jobs').get().then(dat=>{
             console.log(dat.data()[`job${props.location.state.mani.jobnumber}`]['appliedmembers']);
@@ -120,11 +122,10 @@ class Applicants extends React.Component{
         if(this.state.profilerender){
             return (
                 <div>
-                    something
                     {
                         console.log(user)
                     }
-                    <ShowProfile username={user} />
+                    <ShowProfile jobnumber={jobnumber} username={user} />
                 </div>
             )
         }else{
@@ -143,7 +144,7 @@ class Applicants extends React.Component{
                         // <button className='box'>
                         //    <h1>{applicants.username}</h1>
                         // </button>
-                        <Buttonbox username={applicants} />
+                        <Buttonbox username={applicants} callback={this.callback} />
                     );
                 }) : applicants.map((applicants) =>{
                         
@@ -157,11 +158,11 @@ class Applicants extends React.Component{
                 }
                 <br/>
                 <br/>
-<div className="container">
+{/* <div className="container">
     
     <button className="btn btn3">ACCEPT</button>
     <button className="btn btn4">DECLINE</button>
-</div>
+</div> */}
             </div>
         ):(<div>loading..</div>) ;
     }
