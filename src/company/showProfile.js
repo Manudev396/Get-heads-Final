@@ -1,5 +1,7 @@
 import React from "react";
 import firebase from './../firebase/firebase';
+import Loading from "../loading";
+import './showProfile.css';
 
 var ref = firebase.firestore();
 var storage = firebase.storage();
@@ -20,7 +22,7 @@ class ShowProfile extends React.Component{
             email: "",
             gender: ""
         }
-        console.log(props.username);
+        console.log(props);
         
         ref.collection('credentials').doc(props.username).get().then(dat=>{
             console.log(dat.data()['name']);
@@ -43,6 +45,32 @@ class ShowProfile extends React.Component{
         });
     }
 
+    //changes the status to yes while pressed accept
+    accept = ()=>{
+        console.log(this.props.username,this.props.jobnumber);
+        let oldarray = [];
+        let newarray = [];
+        ref.collection('credentials').doc(this.props.username).get().then(dat=>{
+            oldarray = dat.data().appliedjob;
+            console.log(oldarray);
+        }).then(()=>{
+            oldarray.forEach((dat,index)=>{
+                console.log(index,dat);
+                if(dat.jobnumber == this.props.jobnumber){
+                    console.log(true);
+                    newarray[index] = {...oldarray[index],status: "yes"};
+                    oldarray.forEach((dat1,index1)=>{
+                        if(index != index1){
+                            newarray.push(dat1);
+                        }
+                    })
+                    console.log(newarray);
+                }
+            })
+            ref.collection('credentials').doc(this.props.username).update({appliedjob: newarray});
+        })
+    }
+
     render(){
         return this.state.render ? (
             <div style={{fontSize:'20px',backgroundColor:'#20251f',marginLeft:'30px',padding:'30px'}}>
@@ -50,11 +78,16 @@ class ShowProfile extends React.Component{
                 <p style={{float:'left',color:'white'}}>Age:</p><p id='age' style={{color:'white'}}>&nbsp;&nbsp;{this.data.age}</p> <br/>
                 <p style={{float:'left',color:'white'}}>Email:</p><p id='email' style={{color:'white'}}>&nbsp;&nbsp;{this.data.email}</p> <br/>
                 <p style={{float:'left',color:'white'}}>Gender:</p><p id='gender' style={{color:'white'}}>&nbsp;&nbsp;{this.data.gender}</p>
+                
+                <div className="container">
+       <button onClick={this.accept} className="btn btn3">ACCEPT</button>
+        <button className="btn btn4">DECLINE</button>
+        </div>
                 <br/>
                 <br/>
                 <iframe src={uri.toString()} width="100%" height="500px"></iframe>
             </div>
-        ) : (<div>loading</div>);
+        ) : (<div><Loading /></div>);
     }
 }
 
