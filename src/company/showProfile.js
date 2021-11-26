@@ -8,12 +8,13 @@ var storage = firebase.storage();
 var uri = "";
 
 
-class ShowProfile extends React.Component{
+class ShowProfile extends React.Component {
 
-    constructor(props){
+    constructor(props) {
         super(props);
-        this.state={
-            render: false
+        this.state = {
+            render: false,
+            accept: false
         }
         this.resumeRef = "";
         this.data = {
@@ -23,8 +24,8 @@ class ShowProfile extends React.Component{
             gender: ""
         }
         console.log(props);
-        
-        ref.collection('credentials').doc(props.username).get().then(dat=>{
+
+        ref.collection('credentials').doc(props.username).get().then(dat => {
             console.log(dat.data()['name']);
             this.resumeRef = dat.data()['resumeref'];
             // console.log(document.getElementById("name"));
@@ -36,55 +37,104 @@ class ShowProfile extends React.Component{
             this.data.age = dat.data()['age'];
             this.data.email = dat.data()['email'];
             this.data.gender = dat.data()['gender'];
-        }).then(()=>{
-            storage.ref(this.resumeRef.toString()).getDownloadURL().then((url)=>{
+        }).then(() => {
+            storage.ref(this.resumeRef.toString()).getDownloadURL().then((url) => {
                 uri = url;
                 console.log(uri);
-                this.setState({render: true});
+                this.setState({ render: true });
+            })
+
+        })
+        ref.collection('credentials').doc(this.props.username).get().then(dat => {
+            console.log(dat.data().appliedjob);
+            dat.data().appliedjob.forEach((job) => {
+                if (job.jobnumber == props.jobnumber && job.status == 'no') {
+                    this.setState({ accept: true });
+                }
             })
         });
     }
 
     //changes the status to yes while pressed accept
-    accept = ()=>{
-        console.log(this.props.username,this.props.jobnumber);
+    accept = () => {
+        console.log(this.props.username, this.props.jobnumber);
         let oldarray = [];
         let newarray = [];
-        ref.collection('credentials').doc(this.props.username).get().then(dat=>{
+        ref.collection('credentials').doc(this.props.username).get().then(dat => {
             oldarray = dat.data().appliedjob;
             console.log(oldarray);
-        }).then(()=>{
-            oldarray.forEach((dat,index)=>{
-                console.log(index,dat);
-                if(dat.jobnumber == this.props.jobnumber){
+        }).then(() => {
+            oldarray.forEach((dat, index) => {
+                console.log(index, dat);
+                if (dat.jobnumber == this.props.jobnumber) {
                     console.log(true);
-                    newarray[index] = {...oldarray[index],status: "yes"};
-                    oldarray.forEach((dat1,index1)=>{
-                        if(index != index1){
+                    newarray[index] = { ...oldarray[index], status: "yes" };
+                    oldarray.forEach((dat1, index1) => {
+                        if (index != index1) {
                             newarray.push(dat1);
                         }
                     })
                     console.log(newarray);
                 }
             })
-            ref.collection('credentials').doc(this.props.username).update({appliedjob: newarray});
+            ref.collection('credentials').doc(this.props.username).update({ appliedjob: newarray });
+        }).then(() => {
+            this.setState({ accept: true });
         })
     }
 
-    render(){
+
+    reject = () => {
+        console.log(this.props.username, this.props.jobnumber);
+        let oldarray = [];
+        let newarray = [];
+        ref.collection('credentials').doc(this.props.username).get().then(dat => {
+            oldarray = dat.data().appliedjob;
+            console.log(oldarray);
+        }).then(() => {
+            oldarray.forEach((dat, index) => {
+                console.log(index, dat);
+                if (dat.jobnumber == this.props.jobnumber) {
+                    console.log(true);
+                    newarray[index] = { ...oldarray[index], status: "no" };
+                    oldarray.forEach((dat1, index1) => {
+                        if (index != index1) {
+                            newarray.push(dat1);
+                        }
+                    })
+                    console.log(newarray);
+                }
+            })
+            ref.collection('credentials').doc(this.props.username).update({ appliedjob: newarray });
+        }).then(() => {
+            this.setState({ accept: false });
+        })
+    }
+
+    render() {
         return this.state.render ? (
-            <div style={{fontSize:'20px',backgroundColor:'#20251f',marginLeft:'30px',padding:'30px'}}>
-                <p style={{float:'left',color:'white'}}>Name:</p>  <p id='name' style={{color:'white'}}>&nbsp;&nbsp;{this.data.name}</p> <br/>
-                <p style={{float:'left',color:'white'}}>Age:</p><p id='age' style={{color:'white'}}>&nbsp;&nbsp;{this.data.age}</p> <br/>
-                <p style={{float:'left',color:'white'}}>Email:</p><p id='email' style={{color:'white'}}>&nbsp;&nbsp;{this.data.email}</p> <br/>
-                <p style={{float:'left',color:'white'}}>Gender:</p><p id='gender' style={{color:'white'}}>&nbsp;&nbsp;{this.data.gender}</p>
-                
+            <div style={{ fontSize: '20px', backgroundColor: '#20251f', marginLeft: '30px', padding: '30px' }}>
+                <p style={{ float: 'left', color: 'white' }}>Name:</p>  <p id='name' style={{ color: 'white' }}>&nbsp;&nbsp;{this.data.name}</p> <br />
+                <p style={{ float: 'left', color: 'white' }}>Age:</p><p id='age' style={{ color: 'white' }}>&nbsp;&nbsp;{this.data.age}</p> <br />
+                <p style={{ float: 'left', color: 'white' }}>Email:</p><p id='email' style={{ color: 'white' }}>&nbsp;&nbsp;{this.data.email}</p> <br />
+                <p style={{ float: 'left', color: 'white' }}>Gender:</p><p id='gender' style={{ color: 'white' }}>&nbsp;&nbsp;{this.data.gender}</p>
+
                 <div className="container">
-       <button onClick={this.accept} className="btn btn3">ACCEPT</button>
-        <button className="btn btn4">DECLINE</button>
-        </div>
-                <br/>
-                <br/>
+                    {
+                        this.state.accept ? (
+                            <div>
+                                <p>You already accepted this person Do You need to DECLINE</p>
+                                <button onClick={this.reject} className="btn btn4">DECLINE</button>
+                            </div>
+                        ) : (<div>
+                            <button onClick={this.accept} className="btn btn3">ACCEPT</button>
+                        </div>)
+                    }
+                    {/* <button onClick={this.accept} className="btn btn3">ACCEPT</button>
+                    <button onClick={this.reject} className="btn btn4">DECLINE</button> */}
+                </div>
+                <br />
+                <br />
                 <iframe src={uri.toString()} width="100%" height="500px"></iframe>
             </div>
         ) : (<div><Loading /></div>);
